@@ -2,11 +2,11 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 from transformers import RobertaTokenizer
 from datasets import load_dataset
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 import numpy as np
-import copy
+from collections import defaultdict
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def get_dataset():
@@ -31,7 +31,7 @@ def get_dataloaders(data, batch_size):
 
     dataset_list = [train_data, validation_data, test_data]
     keys = ['train', 'validation', 'test']
-    dataloaders = {}
+    dataloaders = defaultdict()
 
     for i, phase in enumerate(keys):
         input_ids = []
@@ -66,4 +66,14 @@ def get_cm(pred_np, labels_np):
     for p, l in zip(pred_np, labels_np):
         cm[l][p] += 1
     return cm
+
+
+def show_cm(cm):
+    plt.figure(figsize=(6, 6))
+    plt.tick_params(axis='both', which='major', labelsize=10,
+                    labelbottom=False, bottom=False,
+                    top=False, labeltop=True)
+
+    ax = sns.heatmap(cm, annot=True)
+    ax.xaxis.set_label_position('top')
 
