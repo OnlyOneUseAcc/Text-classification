@@ -7,6 +7,7 @@ import numpy as np
 from collections import defaultdict
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.metrics import precision_recall_curve, average_precision_score
 
 
 def get_dataset():
@@ -77,3 +78,24 @@ def show_cm(cm):
     ax = sns.heatmap(cm, annot=True)
     ax.xaxis.set_label_position('top')
 
+
+def pr_curve(y_true, y_pred):
+    precision = dict()
+    recall = dict()
+    average_precision = dict()
+    labels = []
+
+    for i in range(2):
+        precision[i], recall[i], _ = precision_recall_curve(y_true[:, i], y_pred[:, i])
+        average_precision[i] = average_precision_score(y_true[:, i], y_pred[:, i])
+        labels.append('Precision-recall for class {0} (area = {1:0.4f})'
+                      ''.format(i, average_precision[i]))
+
+    plt.figure(figsize=(8, 6))
+    plt.step(recall[0], precision[0])
+    plt.step(recall[1], precision[1])
+    plt.xlim([0.0, 1.05])
+    plt.ylim([0.0, 1.05])
+    plt.title('Precision-recall curve')
+    plt.legend(labels)
+    plt.show()
