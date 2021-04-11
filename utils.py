@@ -2,7 +2,11 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 from transformers import RobertaTokenizer
 from datasets import load_dataset
+import matplotlib.pyplot as plt
+import seaborn as sns
 import pandas as pd
+import numpy as np
+import copy
 
 
 def get_dataset():
@@ -53,3 +57,13 @@ def get_dataloaders(data, batch_size):
         dataloaders[keys[i]] = DataLoader(tensor_dataset, batch_size=batch_size,
                                           shuffle=True, num_workers=2)
     return dataloaders
+
+
+def get_cm(pred_np, labels_np):
+    cm = np.zeros((2, 2), dtype=np.int)
+    pred_np = np.argmax(pred_np, axis=1)
+    labels_np = np.argmax(labels_np, axis=1)
+    for p, l in zip(pred_np, labels_np):
+        cm[l][p] += 1
+    return cm
+

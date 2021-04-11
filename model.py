@@ -10,7 +10,7 @@ class TweetModel(torch.nn.Module):
         self.l3 = torch.nn.Linear(768, n_classes)
 
     def forward(self, ids, mask):
-        out = self.l1(ids, attention_mask=mask)[0]
-        out = self.l2(out[:, 0])
+        out = self.l1(ids, attention_mask=mask)[1]
+        out = self.l2(out)
         out = self.l3(out)
         return out

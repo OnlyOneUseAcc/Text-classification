@@ -3,6 +3,7 @@ import time
 from collections import defaultdict
 import torch
 import numpy as np
+import gc
 
 
 def print_metrics(metrics, epoch_samples, phase):
@@ -77,6 +78,8 @@ def train_model(model, optimizer_fn, loss_fn, epochs, dataloaders, device):
         time_elapsed = time.time() - since
         full_metrics['time_elapsed'].append(time_elapsed)
         print('{:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+        torch.cuda.empty_cache()
+        gc.collect()
 
     best_loss_dict = dict(best_train_loss=best_train_loss, best_val_loss=best_val_loss)
     print(f'Best epoch: {best_epoch + 1}')
@@ -87,17 +90,21 @@ def train_model(model, optimizer_fn, loss_fn, epochs, dataloaders, device):
     return model, best_loss_dict, best_epoch, full_metrics
 
 
-def model_test(model, test_dataloader):
-    cm = np.zeros((2, 2), dtype=np.int)
+def model_predict(model, test_dataloader, device):
+    prediction_list = []
+    labels_list = []
+    model.to(device)
     model.eval()
+
     for idx, (ids, masks, labels) in enumerate(iter(test_dataloader)):
         ids = ids.to(device)
         masks = masks.to(device)
         pred = model(ids, masks)
+        for pred_tensor in pred:
+            prediction_list.append(pred_tensor.cpu().detach().numpy())
+        for true_tensor in labels:
+            labels_list.append(true_tensor.cpu().detach().numpy())
+        torch.cuda.empty_cache()
+        gc.collect()
 
-        pred_np = torch.argmax(pred, dim=1).cpu().numpy()
-        labels_np = torch.argmax(labels, dim=1).cpu().numpy()
-
-        for p, l in zip(pred_np, labels_np):
-            cm[l][p] += 1
-    return cm
+    return np.array(prediction_list), np.array(labels_list)
